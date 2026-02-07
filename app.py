@@ -8,7 +8,7 @@ st.set_page_config(page_title="Ella Dashboard", layout="wide")
 st.title("Ella Dashboard")
 
 # --- Connect ---
-SHEET_ID = st.secrets["sheet_id"]
+SHEET_ID = st.secrets["SHEET_ID"]
 sa_info = json.loads(st.secrets["gcp"]["service_account"])
 creds = Credentials.from_service_account_info(
     sa_info,
