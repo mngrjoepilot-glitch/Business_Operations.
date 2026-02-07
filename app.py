@@ -77,20 +77,20 @@ gc = gspread.authorize(creds)
 SHEET_ID = st.secrets["sheet_id"]
 sh = gc.open_by_key(SHEET_ID)
 
-TAB_RECEP = st.secrets["tab_names"]["Recep"]
-TAB_TECH      = st.secrets["tab_names"]["Tech"]
-TAB_WAX-HUB       = st.secrets["tab_names"]["Wax-hub"]
+# --- TAB NAMES ---
+TAB_RECEP   = "Form Responses 1"
+TAB_TECH    = "Form responses 2"
+TAB_WAX_HUB = "Form responses 3"
 
-# --- LOAD ---
 def load_tab(tab_name):
     ws = sh.worksheet(tab_name)
     data = ws.get_all_records()
     return pd.DataFrame(data)
 
-df_reception = load_tab(TAB_RECEP)
-df_tech      = load_tab(TAB_TECH)
-df_wax       = load_tab(TAB_WAX-HUB)
+df_recep   = load_tab(TAB_RECEP)
+df_tech    = load_tab(TAB_TECH)
+df_wax_hub = load_tab(TAB_WAX_HUB)
 
-st.write("Recep rows:", len(df_reception))
+st.write("Recep rows:", len(df_recep))
 st.write("Tech rows:", len(df_tech))
-st.write("Wax-Hub rows:", len(df_wax))
+st.write("Wax-Hub rows:", len(df_wax_hub))
