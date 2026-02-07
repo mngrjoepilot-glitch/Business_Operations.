@@ -60,3 +60,37 @@ for i, (tab, label) in enumerate(TABS):
         st.dataframe(df.head(5), use_container_width=True)
 
 
+
+
+import streamlit as st
+import pandas as pd
+import gspread
+from google.oauth2.service_account import Credentials
+
+# --- AUTH ---
+creds = Credentials.from_service_account_info(
+    st.secrets["gcp"],
+    scopes=["https://www.googleapis.com/auth/spreadsheets.readonly"]
+)
+gc = gspread.authorize(creds)
+
+SHEET_ID = st.secrets["sheet_id"]
+sh = gc.open_by_key(SHEET_ID)
+
+TAB_RECEP = st.secrets["tab_names"]["Recep"]
+TAB_TECH      = st.secrets["tab_names"]["Tech"]
+TAB_WAX-HUB       = st.secrets["tab_names"]["Wax-hub"]
+
+# --- LOAD ---
+def load_tab(tab_name):
+    ws = sh.worksheet(tab_name)
+    data = ws.get_all_records()
+    return pd.DataFrame(data)
+
+df_reception = load_tab(TAB_RECEP)
+df_tech      = load_tab(TAB_TECH)
+df_wax       = load_tab(TAB_WAX-HUB)
+
+st.write("Recep rows:", len(df_reception))
+st.write("Tech rows:", len(df_tech))
+st.write("Wax-Hub rows:", len(df_wax))
