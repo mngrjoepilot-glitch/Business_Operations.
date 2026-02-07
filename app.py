@@ -14,9 +14,13 @@ from google.oauth2.service_account import Credentials
 SCOPES = ["https://www.googleapis.com/auth/spreadsheets.readonly"]
 
 SHEET_ID = st.secrets["SHEET_ID"]
+
 sa = dict(st.secrets["gcp_service_account"])
+sa["private_key"] = sa["private_key"].replace("\\n", "\n")
+
 
 creds = Credentials.from_service_account_info(sa, scopes=SCOPES)
+
 gc = gspread.authorize(creds)
 sh = gc.open_by_key(SHEET_ID)
 
