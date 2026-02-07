@@ -20,7 +20,6 @@ creds = Credentials.from_service_account_info(sa, scopes=SCOPES)
 gc = gspread.authorize(creds)
 sh = gc.open_by_key(SHEET_ID)
 
-)
 gc = gspread.authorize(creds)
 sh = gc.open_by_key(SHEET_ID)
 st.success("Connected ✅")
