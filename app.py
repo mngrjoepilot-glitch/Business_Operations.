@@ -7,13 +7,18 @@ st.set_page_config(page_title="Ella Dashboard", layout="wide")
 st.title("Ella Dashboard")
 
 # --- Connect ---
+import streamlit as st
+import gspread
+from google.oauth2.service_account import Credentials
+
+SCOPES = ["https://www.googleapis.com/auth/spreadsheets.readonly"]
+
 SHEET_ID = st.secrets["SHEET_ID"]
-sa_info = dict(st.secrets["gcp"]["service_account"])
-creds = Credentials.from_service_account_info(
-    sa_info,
-    scopes=[
-        "https://www.googleapis.com/auth/spreadsheets",
-        "https://www.googleapis.com/auth/drive",
+sa = dict(st.secrets["gcp_service_account"])
+
+creds = Credentials.from_service_account_info(sa, scopes=SCOPES)
+gc = gspread.authorize(creds)
+sh = gc.open_by_key(SHEET_ID)
     ],
 )
 gc = gspread.authorize(creds)
