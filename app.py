@@ -1,4 +1,3 @@
-import json
 import streamlit as st
 import pandas as pd
 import gspread
@@ -9,7 +8,7 @@ st.title("Ella Dashboard")
 
 # --- Connect ---
 SHEET_ID = st.secrets["SHEET_ID"]
-sa_info = json.loads(st.secrets["gcp"]["service_account"])
+sa_info = dict(st.secrets["gcp"]["service_account"])
 creds = Credentials.from_service_account_info(
     sa_info,
     scopes=[
