@@ -22,11 +22,21 @@ sh = gc.open_by_key(SHEET_ID)
 st.success("Connected ✅")
 
 # --- Load tabs ---
-TABS = [
-    ("Form Responses 1", "reception"),
-    ("Form Responses 2", "tech"),
-    ("Form Responses 3", "wax"),
-]
+# --- List available tabs ---
+all_tabs = [ws.title for ws in sh.worksheets()]
+st.write("Available tabs:", all_tabs)
+
+# --- Use only the ones that exist ---
+TABS = []
+for wanted, label in [
+    ("Form Responses 1", "Recep"),
+    ("Form responses 2", "Tech"),
+    ("Form responses 3", "Wax-Hub"),
+]:
+    if wanted in all_tabs:
+        TABS.append((wanted, label))
+    else:
+        st.warning(f"Missing tab: {wanted}")
 
 def load_tab(tab_name: str) -> pd.DataFrame:
     ws = sh.worksheet(tab_name)
