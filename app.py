@@ -10,6 +10,42 @@ TAB_RECEP = "Recep"
 TAB_TECH = "Tech"
 TAB_WAX_HUB = "Wax-Hub"
 
+# ===== Step 1: Data Contract (LOCKED) =====
+CONTRACT = {
+    "Recep": {
+        "tab": "Form Responses 1",
+        "timestamp": "Timestamp",
+        "client_name": "Name of client",
+        "phone": "Client Phone number",
+        "service": "Service provided",
+        "provider": "Service provider's Name",
+        "payment_mode": "Mode of Payment",
+        "service_cost": "Service Cost",
+        "technician_payout": "Technician Payout",
+    },
+    "Tech": {
+        "tab": "Form responses 2",
+        "timestamp": "Timestamp",
+        "provider": "Service provider's Name",
+        "service": "Service provided",
+        "payment_mode": "Mode of Payment",
+        "service_cost": "Service Cost",
+        "technician_payout": "Technician Payout",
+    },
+    "Wax-Hub": {
+        "tab": "Form responses 3",
+        "timestamp": "Timestamp",
+        "client_name": "Name of client",
+        "phone": "Client Phone number",
+        "service": "Service provided",
+        "provider": "Service provider's Name",
+        "payment_mode": "Mode of Payment",
+        "service_cost": "Service Cost",
+        "technician_payout": "Technician Payout",
+    },
+}
+
+
 
 # ====== CONFIG (LOCKED) ======
 TAB_RECEP = "Form Responses 1"
