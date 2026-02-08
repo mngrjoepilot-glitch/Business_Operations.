@@ -40,24 +40,26 @@ def show_tab(col, label: str, tab_name: str):
     with col:
         st.subheader(label)
         try:
-            df = load_tab(tab_name)
+            try:
+    df = load_tab(tab_name)
 
-df["Timestamp"] = pd.to_datetime(df["Timestamp"], errors="coerce")
+    df["Timestamp"] = pd.to_datetime(df["Timestamp"], errors="coerce")
 
-start, end = st.date_input(
-    "Date range",
-    [df["Timestamp"].min().date(), df["Timestamp"].max().date()]
-)
+    start, end = st.date_input(
+        "Date range",
+        [df["Timestamp"].min().date(), df["Timestamp"].max().date()]
+    )
 
-df = df[
-    (df["Timestamp"].dt.date >= start) &
-    (df["Timestamp"].dt.date <= end)
-]
+    df = df[
+        (df["Timestamp"].dt.date >= start) &
+        (df["Timestamp"].dt.date <= end)
+    ]
 
-            st.write("Tab:", tab_name)
-            st.metric("Rows", len(df))
-            st.metric("Cols", len(df.columns))
-            st.dataframe(df.head(10), use_container_width=True)
+    st.write("Tab:", tab_name)
+    st.metric("Rows", len(df))
+    st.metric("Cols", len(df.columns))
+    st.dataframe(df.head(10), use_container_width=True)
+
         except Exception as e:
             st.error(f"{label} failed: {type(e).__name__}: {e}")
 
