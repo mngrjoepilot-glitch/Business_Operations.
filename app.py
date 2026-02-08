@@ -21,6 +21,9 @@ import pandas as pd
 import streamlit as st
 import gspread
 from google.oauth2.service_account import Credentials
+# --- secrets (single source of truth) ---
+SHEET_ID = st.secrets["SHEET_ID"]          # <- defines the variable
+GCP_SA_B64 = st.secrets["GCP_SA_B64"]
 
 
 # =========================
