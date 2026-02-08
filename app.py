@@ -91,6 +91,56 @@ def standardize(df: pd.DataFrame, stream_label: str) -> pd.DataFrame:
 
     return df
 
+CANON = {
+    "timestamp": ["Timestamp", "timestamp", "Time stamp", "Date"],
+    "name": ["Name", "Client Name", "Customer", "Customer Name"],
+    "service": ["Service Provided", "Service", "Service Provided ", "Services"],
+    "price": ["Price", "Amount", "Total", "Cost"],
+    "mode": ["Mode of Payment", "Payment Mode", "Payment", "Mode"],
+    "tech": ["Nail Tech Name", "Technician", "Tech Name", "Staff"],
+}
+
+def pick_col(df: pd.DataFrame, options: list[str]) -> str | None:
+    for c in options:
+        if c in df.columns:
+            return c
+    return None
+
+def standardize(df: pd.DataFrame, stream_label: str) -> pd.DataFrame:
+    if df.empty:
+        return df
+
+    df = df.copy()
+    df["Stream"] = stream_label
+
+    ts = pick_col(df, CANON["timestamp"])
+    if ts:
+        df["Timestamp"] = pd.to_datetime(df[ts], errors="coerce")
+
+    nm = pick_col(df, CANON["name"])
+    if nm:
+        df["Client"] = df[nm].astype(str)
+
+    sv = pick_col(df, CANON["service"])
+    if sv:
+        df["Service"] = df[sv].astype(str)
+
+    pr = pick_col(df, CANON["price"])
+    if pr:
+        df["Price"] = pd.to_numeric(df[pr], errors="coerce")
+
+    md = pick_col(df, CANON["mode"])
+    if md:
+        df["PaymentMode"] = df[md].astype(str)
+
+    tc = pick_col(df, CANON["tech"])
+    if tc:
+        df["Tech"] = df[tc].astype(str)
+
+    # keep only the standardized columns (clean output)
+    keep = [c for c in ["Stream","Timestamp","Client","Service","Price","PaymentMode","Tech"] if c in df.columns]
+    return df[keep]
+
 
 def build_df_all() -> pd.DataFrame:
     parts = []
