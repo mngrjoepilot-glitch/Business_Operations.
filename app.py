@@ -115,9 +115,13 @@ def standardize_df(df: pd.DataFrame, stream_name: str) -> pd.DataFrame:
         df["Timestamp"] = pd.to_datetime(df["Timestamp"], errors="coerce")
 
     # coerce price if present
-    if "Price" in df.columns:
-        # handle "1,500", "KSh 1,500", "1500.00", etc
-    df["Price"] = pd.to_numeric(df["Price"].astype(str).str.replace(r"[^\d\.\-]", "", regex=True), errors="coerce")
+    # coerce price if present
+if "Price" in df.columns:
+    df["Price"] = pd.to_numeric(
+        df["Price"].astype(str).str.replace(r"[^\d\.\-]", "", regex=True),
+        errors="coerce"
+    )
+
 
 def validate_required(df_all: pd.DataFrame):
     missing = [c for c in REQUIRED if c not in df_all.columns]
