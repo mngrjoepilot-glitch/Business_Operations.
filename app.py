@@ -32,8 +32,36 @@ sh = gc.open_by_key(SHEET_ID)
 # ====== LOAD (LOCKED) ======
 def load_tab(tab_name: str) -> pd.DataFrame:
     ws = sh.worksheet(tab_name)
-    data = ws.get_all_records()  # expects header row
-    return pd.DataFrame(data)
+
+    # pull raw grid (no header assumptions)
+    values = ws.get_all_values()
+
+    # find first non-empty row to use as header
+    header_idx = None
+    for i, row in enumerate(values):
+        if any(str(c).strip() for c in row):
+            header_idx = i
+            break
+    if header_idx is None:
+        return pd.DataFrame()
+
+    headers = [str(h).strip() if str(h).strip() else f"col_{j}" for j, h in enumerate(values[header_idx])]
+
+    # make headers unique (handles duplicates safely)
+    seen = {}
+    clean = []
+    for h in headers:
+        k = seen.get(h, 0)
+        clean.append(h if k == 0 else f"{h}_{k}")
+        seen[h] = k + 1
+
+    data = values[header_idx + 1 :]
+    df = pd.DataFrame(data, columns=clean)
+
+    # drop fully empty rows
+    df = df.replace(r"^\s*$", pd.NA, regex=True).dropna(how="all")
+    return df
+
 
 
 def show_tab(col, label: str, tab_name: str):
