@@ -83,6 +83,38 @@ def load_tab(tab_name: str) -> pd.DataFrame:
 
     headers = [str(h).strip() if str(h).strip() else f"col_{j}" for j, h in enumerate(values[header_idx])]
 
+# ===== Step 2: Build unified table =====
+def build_df_all():
+    frames = []
+
+    for stream, cfg in CONTRACT.items():
+        df = load_tab(cfg["tab"]).copy()
+
+        # normalize columns using contract
+        out = pd.DataFrame()
+        out["timestamp"] = pd.to_datetime(df.get(cfg["timestamp"]), errors="coerce")
+        out["stream"] = stream
+        out["provider"] = df.get(cfg.get("provider"))
+        out["service"] = df.get(cfg.get("service"))
+        out["payment_mode"] = df.get(cfg.get("payment_mode"))
+        out["service_cost"] = pd.to_numeric(df.get(cfg.get("service_cost")), errors="coerce")
+        out["technician_payout"] = pd.to_numeric(df.get(cfg.get("technician_payout")), errors="coerce")
+
+        # optional fields
+        out["client_name"] = df.get(cfg.get("client_name"))
+        out["phone"] = df.get(cfg.get("phone"))
+
+        frames.append(out)
+
+    df_all = pd.concat(frames, ignore_index=True)
+
+    # drop empty rows
+    df_all = df_all.dropna(subset=["timestamp"], how="all")
+
+    return df_all
+
+
+    
     # make headers unique (handles duplicates safely)
     seen = {}
     clean = []
@@ -131,6 +163,7 @@ def show_tab(col, label: str, tab_name: str):
         except Exception as e:
             st.error(f"Failed ({tab_name}): {type(e).__name__}: {e}")
 
+df_all = build_df_all()
 
 # ====== UI (LOCKED) ======
 st.set_page_config(page_title="Ella Dashboard", layout="wide")
