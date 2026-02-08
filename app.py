@@ -3,7 +3,7 @@ import gspread
 import pandas as pd
 from google.oauth2.service_account import Credentials
 
-SHEET_ID = "PASTE_YOUR_SHEET_ID_HERE"
+SHEET_ID = "144GXa99ETKAMXvY6i9IELvmF7gF0U07ta2Z-IbIEN38"
 
 SCOPES = ["https://www.googleapis.com/auth/spreadsheets.readonly"]
 
@@ -15,7 +15,7 @@ creds = Credentials.from_service_account_file(
 gc = gspread.authorize(creds)
 sh = gc.open_by_key(SHEET_ID)
 
-st.title("ENP OPERATIONAL KPIs")
+st.title("E.N.P OPERATIONAL KPIs")
 
 tabs = {
     "Recep": "Form Responses 1",
