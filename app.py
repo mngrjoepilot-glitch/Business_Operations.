@@ -15,7 +15,7 @@ TAB_TECH    = "Form responses 2"
 TAB_WAX_HUB = "Form responses 3"
 
 st.set_page_config(page_title="Ella Dashboard", layout="wide")
-st.title("Ella Dashboard")
+st.title("E.N.S. OPERATION DASHBOARD")
 
 # -------------------
 # AUTH (LOCKED)
