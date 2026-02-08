@@ -202,6 +202,8 @@ with m1:
 with m2:
     st.metric("Services (unique)", df_f["Service"].nunique(dropna=True))
 with m3:
-    st.metric("Total Price", float(df_f["Price"].fillna(0).sum()) if "Price" in df_f.columns else 0.0)
+    total_price = df_f["Price"].dropna().sum() if "Price" in df_f.columns else 0.0
+st.metric("Total Price", float(total_price))
+
 
 st.dataframe(df_f.sort_values("Timestamp", ascending=False), use_container_width=True)
