@@ -163,7 +163,13 @@ def show_tab(col, label: str, tab_name: str):
         except Exception as e:
             st.error(f"Failed ({tab_name}): {type(e).__name__}: {e}")
 
-df_all = build_df_all()
+df_all_parts = []
+for stream_name, spec in CONTRACT.items():
+    raw = load_tab(spec["tab"])
+    df_all_parts.append(to_standard(raw, spec, stream_name))
+
+df_all = pd.concat(df_all_parts, ignore_index=True)
+
 
 # ====== UI (LOCKED) ======
 st.set_page_config(page_title="Ella Dashboard", layout="wide")
