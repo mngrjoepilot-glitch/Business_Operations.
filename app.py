@@ -163,7 +163,6 @@ def show_tab(col, label: str, tab_name: str):
         except Exception as e:
             st.error(f"Failed ({tab_name}): {type(e).__name__}: {e}")
 
-df_all = build_df_all()
 
 # ====== UI (LOCKED) ======
 st.set_page_config(page_title="Ella Dashboard", layout="wide")
