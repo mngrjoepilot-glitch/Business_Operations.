@@ -1,103 +1,30 @@
 import streamlit as st
+import gspread
 import pandas as pd
-import gspread
 from google.oauth2.service_account import Credentials
 
-st.set_page_config(page_title="Ella Dashboard", layout="wide")
-st.title("Ella Dashboard")
-
-# --- Connect ---
-import streamlit as st
-import gspread
-from google.oauth2.service_account import Credentials
+SHEET_ID = "PASTE_YOUR_SHEET_ID_HERE"
 
 SCOPES = ["https://www.googleapis.com/auth/spreadsheets.readonly"]
 
-SHEET_ID = st.secrets["SHEET_ID"]
-
-sa = dict(st.secrets["gcp_service_account"])
-sa["private_key"] = sa["private_key"].replace("\\n", "\n")
-
-
-creds = Credentials.from_service_account_info(sa, scopes=SCOPES)
-
-gc = gspread.authorize(creds)
-sh = gc.open_by_key(SHEET_ID)
-
-gc = gspread.authorize(creds)
-sh = gc.open_by_key(SHEET_ID)
-st.success("Connected ✅")
-
-# --- Load tabs ---
-# --- List available tabs ---
-all_tabs = [ws.title for ws in sh.worksheets()]
-st.write("Available tabs:", all_tabs)
-
-# --- Use only the ones that exist ---
-TABS = []
-for wanted, label in [
-    ("Form Responses 1", "Recep"),
-    ("Form responses 2", "Tech"),
-    ("Form responses 3", "Wax-Hub"),
-]:
-    if wanted in all_tabs:
-        TABS.append((wanted, label))
-    else:
-        st.warning(f"Missing tab: {wanted}")
-
-def load_tab(tab_name: str) -> pd.DataFrame:
-    ws = sh.worksheet(tab_name)
-    vals = ws.get_all_values()
-    if len(vals) < 2:
-        return pd.DataFrame()
-    headers = vals[0]
-    rows = vals[1:]
-    df = pd.DataFrame(rows, columns=headers)
-    return df
-
-cols = st.columns(3)
-
-for i, (tab, label) in enumerate(TABS):
-    df = load_tab(tab)
-    with cols[i]:
-        st.subheader(label)
-        st.write("Tab:", tab)
-        st.metric("Rows", len(df))
-        st.metric("Cols", len(df.columns))
-        st.dataframe(df.head(5), use_container_width=True)
-
-
-
-
-import streamlit as st
-import pandas as pd
-import gspread
-from google.oauth2.service_account import Credentials
-
-# --- AUTH ---
-creds = Credentials.from_service_account_info(
-    st.secrets["gcp"],
-    scopes=["https://www.googleapis.com/auth/spreadsheets.readonly"]
+creds = Credentials.from_service_account_file(
+    "service_account.json",
+    scopes=SCOPES
 )
-gc = gspread.authorize(creds)
 
-SHEET_ID = st.secrets["sheet_id"]
+gc = gspread.authorize(creds)
 sh = gc.open_by_key(SHEET_ID)
 
-# --- TAB NAMES ---
-TAB_RECEP   = "Form Responses 1"
-TAB_TECH    = "Form responses 2"
-TAB_WAX_HUB = "Form responses 3"
+st.title("ENP OPERATIONAL KPIs")
 
-def load_tab(tab_name):
-    ws = sh.worksheet(tab_name)
-    data = ws.get_all_records()
-    return pd.DataFrame(data)
+tabs = {
+    "Recep": "Form Responses 1",
+    "Tech": "Form responses 2",
+    "Wax-Hub": "Form responses 3"
+}
 
-df_recep   = load_tab(TAB_RECEP)
-df_tech    = load_tab(TAB_TECH)
-df_wax_hub = load_tab(TAB_WAX_HUB)
+tab_name = st.selectbox("Select tab", list(tabs.keys()))
+ws = sh.worksheet(tabs[tab_name])
 
-st.write("Recep rows:", len(df_recep))
-st.write("Tech rows:", len(df_tech))
-st.write("Wax-Hub rows:", len(df_wax_hub))
+df = pd.DataFrame(ws.get_all_records())
+st.dataframe(df)
