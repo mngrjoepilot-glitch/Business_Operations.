@@ -59,7 +59,7 @@ try:
     st.metric("Cols", len(df.columns))
     st.dataframe(df.head(10), use_container_width=True)
 
-        except Exception as e:
+except Exception as e:
             st.error(f"{label} failed: {type(e).__name__}: {e}")
 
 
