@@ -9,9 +9,10 @@ from google.oauth2.service_account import Credentials
 
 
 # ====== CONFIG (LOCKED) ======
-TAB_RECEP = "Recep"
-TAB_TECH = "Tech"
-TAB_WAX_HUB = "Wax-Hub"
+TAB_RECEP = "Form Responses 1"
+TAB_TECH = "Form responses 2"
+TAB_WAX_HUB = "Form responses 3"
+
 
 
 # ====== AUTH (LOCKED) ======
