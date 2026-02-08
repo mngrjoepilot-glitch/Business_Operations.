@@ -42,7 +42,7 @@ def get_gspread_client():
 
     creds = Credentials.from_service_account_info(sa_info, scopes=SCOPES)
     gc = gspread.authorize(creds)
-    return gc, sheet_id
+    return gc, SHEET_ID
 
 
 # =========================
