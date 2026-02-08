@@ -204,6 +204,8 @@ with m2:
 with m3:
     total_price = df_f["Price"].dropna().sum() if "Price" in df_f.columns else 0.0
 st.metric("Total Price", float(total_price))
+st.caption("Price sanity check (filtered):")
+st.write(df_f["Price"].describe(include="all"))
 
 
 st.dataframe(df_f.sort_values("Timestamp", ascending=False), use_container_width=True)
