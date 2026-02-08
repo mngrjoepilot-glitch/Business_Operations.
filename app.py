@@ -39,7 +39,7 @@ def load_tab(tab_name: str) -> pd.DataFrame:
 def show_tab(col, label: str, tab_name: str):
     with col:
         st.subheader(label)
-        try:
+try:
     df = load_tab(tab_name)
 
     df["Timestamp"] = pd.to_datetime(df["Timestamp"], errors="coerce")
