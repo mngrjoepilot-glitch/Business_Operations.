@@ -60,7 +60,7 @@ try:
     st.dataframe(df.head(10), use_container_width=True)
 
 except Exception as e:
-            st.error(f"{label} failed: {type(e).__name__}: {e}")
+            st.error(f"Failed ({tab_name}): {type(e).__name__}: {e}")
 
 
 # ====== UI (LOCKED) ======
