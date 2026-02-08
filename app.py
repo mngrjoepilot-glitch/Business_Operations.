@@ -15,11 +15,17 @@ TAB_RECEP = "Form Responses 1"
 TAB_TECH = "Form responses 2"
 TAB_WAX_HUB = "Form responses 3"
 
-STREAMS = [
-    {"label": "Recep", "tab": TAB_RECEP},
-    {"label": "Tech", "tab": TAB_TECH},
-    {"label": "Wax-Hub", "tab": TAB_WAX_HUB},
-]
+st.divider()
+st.subheader("All Streams (standardized)")
+
+missing = [c for c in ["Stream","Timestamp","Service","Price"] if c not in df_all.columns]
+if missing:
+    st.error(f"Missing standardized cols: {missing}")
+else:
+    st.success("Standardization OK")
+
+st.dataframe(df_all.sort_values("Timestamp", ascending=False).head(100), use_container_width=True)
+
 
 SCOPES = ["https://www.googleapis.com/auth/spreadsheets.readonly"]
 
