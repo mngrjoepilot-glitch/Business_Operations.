@@ -116,7 +116,13 @@ def standardize_df(df: pd.DataFrame, stream_name: str) -> pd.DataFrame:
 
     # coerce price if present
     if "Price" in df.columns:
-        df["Price"] = pd.to_numeric(df["Price"], errors="coerce")
+        # handle "1,500", "KSh 1,500", "1500.00", etc
+df["Price"] = (
+    df["Price"]
+    .astype(str)
+    .str.replace(r"[^\d\.\-]", "", regex=True)
+)
+df["Price"] = pd.to_numeric(df["Price"], errors="coerce")
 
     return df
 
