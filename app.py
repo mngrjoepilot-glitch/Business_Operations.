@@ -6,6 +6,9 @@ import pandas as pd
 import streamlit as st
 import gspread
 from google.oauth2.service_account import Credentials
+TAB_RECEP = "Recep"
+TAB_TECH = "Tech"
+TAB_WAX_HUB = "Wax-Hub"
 
 
 # ====== CONFIG (LOCKED) ======
@@ -38,6 +41,19 @@ def show_tab(col, label: str, tab_name: str):
         st.subheader(label)
         try:
             df = load_tab(tab_name)
+
+df["Timestamp"] = pd.to_datetime(df["Timestamp"], errors="coerce")
+
+start, end = st.date_input(
+    "Date range",
+    [df["Timestamp"].min().date(), df["Timestamp"].max().date()]
+)
+
+df = df[
+    (df["Timestamp"].dt.date >= start) &
+    (df["Timestamp"].dt.date <= end)
+]
+
             st.write("Tab:", tab_name)
             st.metric("Rows", len(df))
             st.metric("Cols", len(df.columns))
