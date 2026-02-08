@@ -1,181 +1,139 @@
-# app.py
 import base64
 import json
+from datetime import datetime
 
 import pandas as pd
 import streamlit as st
 import gspread
 from google.oauth2.service_account import Credentials
-TAB_RECEP = "Recep"
-TAB_TECH = "Tech"
-TAB_WAX_HUB = "Wax-Hub"
-
-# ===== Step 1: Data Contract (LOCKED) =====
-CONTRACT = {
-    "Recep": {
-        "tab": "Form Responses 1",
-        "timestamp": "Timestamp",
-        "client_name": "Name of client",
-        "phone": "Client Phone number",
-        "service": "Service provided",
-        "provider": "Service provider's Name",
-        "payment_mode": "Mode of Payment",
-        "service_cost": "Service Cost",
-        "technician_payout": "Technician Payout",
-    },
-    "Tech": {
-        "tab": "Form responses 2",
-        "timestamp": "Timestamp",
-        "provider": "Service provider's Name",
-        "service": "Service provided",
-        "payment_mode": "Mode of Payment",
-        "service_cost": "Service Cost",
-        "technician_payout": "Technician Payout",
-    },
-    "Wax-Hub": {
-        "tab": "Form responses 3",
-        "timestamp": "Timestamp",
-        "client_name": "Name of client",
-        "phone": "Client Phone number",
-        "service": "Service provided",
-        "provider": "Service provider's Name",
-        "payment_mode": "Mode of Payment",
-        "service_cost": "Service Cost",
-        "technician_payout": "Technician Payout",
-    },
-}
 
 
-
-# ====== CONFIG (LOCKED) ======
+# -----------------------------
+# CONFIG (your tab naming)
+# -----------------------------
 TAB_RECEP = "Form Responses 1"
 TAB_TECH = "Form responses 2"
 TAB_WAX_HUB = "Form responses 3"
 
-
-
-# ====== AUTH (LOCKED) ======
-SHEET_ID = st.secrets["SHEET_ID"]
-sa_info = json.loads(base64.b64decode(st.secrets["GCP_SA_B64"]).decode("utf-8"))
+STREAMS = [
+    {"label": "Recep", "tab": TAB_RECEP},
+    {"label": "Tech", "tab": TAB_TECH},
+    {"label": "Wax-Hub", "tab": TAB_WAX_HUB},
+]
 
 SCOPES = ["https://www.googleapis.com/auth/spreadsheets.readonly"]
-creds = Credentials.from_service_account_info(sa_info, scopes=SCOPES)
-
-gc = gspread.authorize(creds)
-sh = gc.open_by_key(SHEET_ID)
 
 
-# ====== LOAD (LOCKED) ======
+# -----------------------------
+# AUTH + SHEET
+# -----------------------------
+def _get_creds() -> Credentials:
+    sa_b64 = st.secrets["GCP_SA_B64"]
+    sa_json = base64.b64decode(sa_b64).decode("utf-8")
+    sa_info = json.loads(sa_json)
+    return Credentials.from_service_account_info(sa_info, scopes=SCOPES)
+
+
+@st.cache_resource
+def _get_sheet():
+    creds = _get_creds()
+    gc = gspread.authorize(creds)
+    sh = gc.open_by_key(st.secrets["SHEET_ID"])
+    return sh
+
+
+# -----------------------------
+# SAFE LOAD (handles duplicate headers)
+# -----------------------------
+def _make_unique(headers: list[str]) -> list[str]:
+    seen = {}
+    out = []
+    for h in headers:
+        h0 = (h or "").strip()
+        if h0 == "":
+            h0 = "Unnamed"
+        if h0 not in seen:
+            seen[h0] = 0
+            out.append(h0)
+        else:
+            seen[h0] += 1
+            out.append(f"{h0}__{seen[h0]}")
+    return out
+
+
 def load_tab(tab_name: str) -> pd.DataFrame:
-    ws = sh.worksheet(tab_name)
-
-    # pull raw grid (no header assumptions)
+    sh = _get_sheet()
+    ws = sh.worksheet(tab_name)  # must match EXACTLY
     values = ws.get_all_values()
-
-    # find first non-empty row to use as header
-    header_idx = None
-    for i, row in enumerate(values):
-        if any(str(c).strip() for c in row):
-            header_idx = i
-            break
-    if header_idx is None:
+    if not values or len(values) < 2:
         return pd.DataFrame()
 
-    headers = [str(h).strip() if str(h).strip() else f"col_{j}" for j, h in enumerate(values[header_idx])]
+    headers = _make_unique(values[0])
+    rows = values[1:]
+    df = pd.DataFrame(rows, columns=headers)
 
-# ===== Step 2: Build unified table =====
-def build_df_all():
-    frames = []
+    # Trim whitespace in all string cells
+    df = df.applymap(lambda x: x.strip() if isinstance(x, str) else x)
 
-    for stream, cfg in CONTRACT.items():
-        df = load_tab(cfg["tab"]).copy()
-
-        # normalize columns using contract
-        out = pd.DataFrame()
-        out["timestamp"] = pd.to_datetime(df.get(cfg["timestamp"]), errors="coerce")
-        out["stream"] = stream
-        out["provider"] = df.get(cfg.get("provider"))
-        out["service"] = df.get(cfg.get("service"))
-        out["payment_mode"] = df.get(cfg.get("payment_mode"))
-        out["service_cost"] = pd.to_numeric(df.get(cfg.get("service_cost")), errors="coerce")
-        out["technician_payout"] = pd.to_numeric(df.get(cfg.get("technician_payout")), errors="coerce")
-
-        # optional fields
-        out["client_name"] = df.get(cfg.get("client_name"))
-        out["phone"] = df.get(cfg.get("phone"))
-
-        frames.append(out)
-
-    df_all = pd.concat(frames, ignore_index=True)
-
-    # drop empty rows
-    df_all = df_all.dropna(subset=["timestamp"], how="all")
-
-    return df_all
-
-
-    
-    # make headers unique (handles duplicates safely)
-    seen = {}
-    clean = []
-    for h in headers:
-        k = seen.get(h, 0)
-        clean.append(h if k == 0 else f"{h}_{k}")
-        seen[h] = k + 1
-
-    data = values[header_idx + 1 :]
-    df = pd.DataFrame(data, columns=clean)
-
-    # drop fully empty rows
-    df = df.replace(r"^\s*$", pd.NA, regex=True).dropna(how="all")
     return df
 
 
+def standardize(df: pd.DataFrame, stream_label: str) -> pd.DataFrame:
+    if df.empty:
+        return df
 
-def show_tab(col, label: str, tab_name: str):
-    with col:
-        st.subheader(label)
-        try:
-            df = load_tab(tab_name)
+    df = df.copy()
+    df["Stream"] = stream_label
 
-            df["Timestamp"] = pd.to_datetime(
-                df["Timestamp"], errors="coerce"
-            )
+    # Common: Timestamp column from Google Forms is usually "Timestamp"
+    if "Timestamp" in df.columns:
+        df["Timestamp"] = pd.to_datetime(df["Timestamp"], errors="coerce")
 
-            start, end = st.date_input(
-                "Date range",
-                [
-                    df["Timestamp"].min().date(),
-                    df["Timestamp"].max().date(),
-                ],
-            )
-
-            df = df[
-                (df["Timestamp"].dt.date >= start)
-                & (df["Timestamp"].dt.date <= end)
-            ]
-
-            st.write("Tab:", tab_name)
-            st.metric("Rows", len(df))
-            st.metric("Cols", len(df.columns))
-            st.dataframe(df.head(10), use_container_width=True)
-
-        except Exception as e:
-            st.error(f"Failed ({tab_name}): {type(e).__name__}: {e}")
-
-df_all_parts = []
-for stream_name, spec in CONTRACT.items():
-    raw = load_tab(spec["tab"])
-    df_all_parts.append(to_standard(raw, spec, stream_name))
-
-df_all = pd.concat(df_all_parts, ignore_index=True)
+    return df
 
 
-# ====== UI (LOCKED) ======
+def build_df_all() -> pd.DataFrame:
+    parts = []
+    for s in STREAMS:
+        raw = load_tab(s["tab"])
+        std = standardize(raw, s["label"])
+        if not std.empty:
+            parts.append(std)
+
+    if not parts:
+        return pd.DataFrame()
+
+    return pd.concat(parts, ignore_index=True)
+
+
+# -----------------------------
+# UI
+# -----------------------------
 st.set_page_config(page_title="Ella Dashboard", layout="wide")
 st.title("Ella Dashboard")
 
+try:
+    df_all = build_df_all()
+except Exception as e:
+    st.error(f"Load failed: {type(e).__name__}: {e}")
+    st.stop()
+
 c1, c2, c3 = st.columns(3)
-show_tab(c1, "Recep", TAB_RECEP)
-show_tab(c2, "Tech", TAB_TECH)
-show_tab(c3, "Wax-Hub", TAB_WAX_HUB)
+
+for col, s in zip([c1, c2, c3], STREAMS):
+    with col:
+        st.subheader(s["label"])
+        try:
+            df = standardize(load_tab(s["tab"]), s["label"])
+            st.write("Tab:", s["tab"])
+            st.metric("Rows", len(df))
+            st.metric("Cols", len(df.columns))
+            st.dataframe(df.head(15), use_container_width=True)
+        except Exception as e:
+            st.error(f"{s['label']} failed: {type(e).__name__}: {e}")
+
+st.divider()
+st.subheader("All Streams (combined)")
+st.metric("Total Rows", len(df_all))
+st.metric("Total Cols", len(df_all.columns))
+st.dataframe(df_all.head(50), use_container_width=True)
